@@ -37,6 +37,19 @@ def _validate_decimal(
     return value
 
 
+def _normalize_non_empty_text(value: object, field_name: str) -> str:
+    """Normalize required text while preserving its casing."""
+    if not isinstance(value, str):
+        raise TypeError(f"{field_name} must be a string")
+
+    normalized_value = value.strip()
+
+    if not normalized_value:
+        raise ValueError(f"{field_name} must not be blank")
+
+    return normalized_value
+
+
 @dataclass(frozen=True)
 class Position:
     """A long-only holding in a portfolio."""
@@ -72,3 +85,36 @@ class Position:
         object.__setattr__(self, "currency", normalized_currency)
         object.__setattr__(self, "quantity", validated_quantity)
         object.__setattr__(self, "average_cost", validated_average_cost)
+
+
+@dataclass(frozen=True)
+class Portfolio:
+    """An immutable collection of positions with portfolio-level invariants."""
+
+    identifier: str
+    name: str
+    positions: tuple[Position, ...] = ()
+
+    def __post_init__(self) -> None:
+        normalized_identifier = _normalize_non_empty_text(
+            self.identifier,
+            "identifier",
+        )
+        normalized_name = _normalize_non_empty_text(self.name, "name")
+
+        try:
+            normalized_positions = tuple(self.positions)
+        except TypeError as error:
+            raise TypeError("positions must be iterable") from error
+
+        if not all(isinstance(position, Position) for position in normalized_positions):
+            raise TypeError("positions must contain only Position instances")
+
+        symbols = [position.symbol for position in normalized_positions]
+
+        if len(symbols) != len(set(symbols)):
+            raise ValueError("positions must not contain duplicate symbols")
+
+        object.__setattr__(self, "identifier", normalized_identifier)
+        object.__setattr__(self, "name", normalized_name)
+        object.__setattr__(self, "positions", normalized_positions)
