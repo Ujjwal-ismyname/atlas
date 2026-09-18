@@ -1,16 +1,17 @@
-from decimal import Decimal
 from dataclasses import FrozenInstanceError
+from decimal import Decimal
 
 import pytest
 
 from atlas.domain.portfolio import Position
 
-def make_position(**overrides : object) -> Position:
-    values: dict[str,object] = {
+
+def make_position(**overrides: object) -> Position:
+    values: dict[str, object] = {
         "symbol": "AAPL",
-        "quantity":Decimal("10"),
-        "average_cost":Decimal("185.50"),
-        "currency":"USD",
+        "quantity": Decimal("10"),
+        "average_cost": Decimal("185.50"),
+        "currency": "USD",
     }
     values.update(overrides)
 
@@ -18,26 +19,34 @@ def make_position(**overrides : object) -> Position:
 
 
 def test_position_normalizes_symbol_and_currency() -> None:
-    position = make_position(symbol = " aapl ", currency = "usd")
+    position = make_position(symbol=" aapl ", currency="usd")
 
     assert position.symbol == "AAPL"
     assert position.currency == "USD"
     assert position.quantity == Decimal("10")
     assert position.average_cost == Decimal("185.50")
 
-def test_position_allows_zero_average_cost()->None:
-    position = make_position(average_cost = Decimal("0"))
+
+def test_position_allows_zero_average_cost() -> None:
+    position = make_position(average_cost=Decimal("0"))
+
     assert position.average_cost == Decimal("0")
 
-@pytest.mark.parametrize("invalid_symbol", [""," "])
+
+@pytest.mark.parametrize("invalid_symbol", ["", "   "])
 def test_position_rejects_blank_symbol(invalid_symbol: str) -> None:
     with pytest.raises(ValueError, match="symbol"):
         make_position(symbol=invalid_symbol)
 
-@pytest.mark.parametrize("invalid_currency",["","US","USDD","U5D","UŚD"])
+
+@pytest.mark.parametrize(
+    "invalid_currency",
+    ["", "US", "USDD", "U5D", "UŚD"],
+)
 def test_position_rejects_invalid_currency(invalid_currency: str) -> None:
-    with pytest.raises(ValueError, match = "currency"):
-        make_position(currency = invalid_currency)
+    with pytest.raises(ValueError, match="currency"):
+        make_position(currency=invalid_currency)
+
 
 @pytest.mark.parametrize(
     "invalid_quantity",
@@ -50,7 +59,8 @@ def test_position_rejects_invalid_currency(invalid_currency: str) -> None:
 )
 def test_position_rejects_invalid_quantity(invalid_quantity: Decimal) -> None:
     with pytest.raises(ValueError, match="quantity"):
-        make_position(quantity = invalid_quantity)
+        make_position(quantity=invalid_quantity)
+
 
 @pytest.mark.parametrize(
     "invalid_average_cost",
