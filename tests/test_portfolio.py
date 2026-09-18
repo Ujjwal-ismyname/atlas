@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-from atlas.domain.portfolio import Position
+from atlas.domain.portfolio import Portfolio, Position
 
 
 def make_position(**overrides: object) -> Position:
@@ -92,3 +92,67 @@ def test_position_is_immutable() -> None:
 
     with pytest.raises(FrozenInstanceError):
         position.symbol = "MSFT"
+
+
+def make_portfolio(**overrides: object) -> Portfolio:
+    values: dict[str, object] = {
+        "identifier": "retirement-core",
+        "name": "Retirement Core",
+        "positions": (),
+    }
+    values.update(overrides)
+
+    return Portfolio(**values)
+
+
+def test_portfolio_stores_its_positions_as_a_tuple() -> None:
+    position = make_position()
+
+    portfolio = make_portfolio(positions=[position])
+
+    assert portfolio.identifier == "retirement-core"
+    assert portfolio.name == "Retirement Core"
+    assert portfolio.positions == (position,)
+    assert isinstance(portfolio.positions, tuple)
+
+
+def test_portfolio_allows_no_positions() -> None:
+    portfolio = make_portfolio()
+    assert portfolio.positions == ()
+
+
+def test_portfolio_snapshots_a_mutable_positions_input() -> None:
+    source_positions = [make_position(symbol="AAPL")]
+
+    portfolio = make_portfolio(positions=source_positions)
+
+    source_positions.append(make_position(symbol="MSFT"))
+
+    assert portfolio.positions == (make_position(symbol="AAPL"),)
+
+
+@pytest.mark.parametrize("invalid_identifier", ["", "   "])
+def test_portfolio_rejects_blank_identifier(invalid_identifier: str) -> None:
+    with pytest.raises(ValueError, match="identifier"):
+        make_portfolio(identifier=invalid_identifier)
+
+
+@pytest.mark.parametrize("invalid_name", ["", "   "])
+def test_portfolio_rejects_blank_name(invalid_name: str) -> None:
+    with pytest.raises(ValueError, match="name"):
+        make_portfolio(name=invalid_name)
+
+
+def test_portfolio_rejects_duplicate_position_symbols() -> None:
+    first = make_position(symbol="AAPL")
+    duplicate = make_position(symbol=" aapl ")
+
+    with pytest.raises(ValueError, match="duplicate"):
+        make_portfolio(positions=[first, duplicate])
+
+
+def test_portfolio_is_immutable() -> None:
+    portfolio = make_portfolio()
+
+    with pytest.raises(FrozenInstanceError):
+        portfolio.name = "Different Name"
