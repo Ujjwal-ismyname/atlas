@@ -118,3 +118,8 @@ class Portfolio:
         object.__setattr__(self, "identifier", normalized_identifier)
         object.__setattr__(self, "name", normalized_name)
         object.__setattr__(self, "positions", normalized_positions)
+
+    @property
+    def symbols(self) -> tuple[str, ...]:
+        """Return held symbols in portfolio position order."""
+        return tuple(position.symbol for position in self.positions)
