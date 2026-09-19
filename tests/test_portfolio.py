@@ -156,3 +156,21 @@ def test_portfolio_is_immutable() -> None:
 
     with pytest.raises(FrozenInstanceError):
         portfolio.name = "Different Name"
+
+
+def test_portfolio_exposes_symbols_in_position_order() -> None:
+    portfolio = make_portfolio(
+        positions=[
+            make_position(symbol="MSFT"),
+            make_position(symbol="AAPL"),
+        ],
+    )
+
+    assert portfolio.symbols == ("MSFT", "AAPL")
+    assert isinstance(portfolio.symbols, tuple)
+
+
+def test_empty_portfolio_exposes_no_symbols() -> None:
+    portfolio = make_portfolio()
+
+    assert portfolio.symbols == ()
