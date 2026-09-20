@@ -13,7 +13,7 @@ agent workflows, evaluation, observability, security, and deployment.
 Atlas is in active early development.
 
 - Current milestone: M0 — Portfolio-risk platform foundation
-- Current issue: #1 — Initialize Atlas and define the portfolio research domain
+- Current issue: #7 — Configure quality gates: Ruff, Mypy, and Pytest
 
 ## Intended users
 
@@ -55,9 +55,20 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
-## Run tests
+### Quality gates
+
+Run the automated checks locally before committing:
+
 ```bash
-python -m pytest
+# Format check & linting
+ruff check .
+ruff format --check .
+
+# Type checking
+mypy
+
+# Tests
+pytest
 ```
 
 ## Repository structure
